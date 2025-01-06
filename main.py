@@ -51,19 +51,86 @@ for layer in network:
 # %%
 
 # ───────────────────────────────────────────────────────────────────────────────
-# 1. Initialize Network
+# 2. Forward Propagate
 # ───────────────────────────────────────────────────────────────────────────────
 #
 # We can calculate an output from a neural network by propagating an input signal
 # through each layer until the output layer outputs its values.
 #
-# 1. Neuron Activation
-# 2. Neuron Transfer
-# 3. Forward Propagation
+# We can break forward propagation down into three parts:
+#
+#     1. Neuron Activation
+#     2. Neuron Transfer
+#     3. Forward Propagation
 
+# ──────────────────────────────────────
+# 2.1 Neuron Activation
+# ──────────────────────────────────────
+#
+# The first step is to calculate the activation of one neuron given an input.
+# Neuron activation is calculated as the weighted sum of the inputs – much like
+# linear regression.
 
 # %%
 
+# Calculate neuron activation for an input
+def activate(weights, inputs):
+    activation = weights[-1]
+    for i in range(len(weights)-1):
+        activation += weights[i] * inputs[i]
+    return activation
 
 # %%
 
+# ──────────────────────────────────────
+# 2.2 Neuron Transfer
+# ──────────────────────────────────────
+#
+# Once a neuron is activated, we need to transfer the activation to see what the
+# neuron output actually is. We can transfer an activation function using the
+# sigmoid function as follows:
+
+# %%
+
+from math import exp
+
+# Transfer a neuron activation
+def transfer(activation):
+    return 1.0 / (1.0 + exp(-activation))
+
+# %%
+
+# ──────────────────────────────────────
+# 2.3 Forward Propagation
+# ──────────────────────────────────────
+#
+# Forward propagating an input is straightforward. We work through each layer of
+# our network calculating the outputs for each neuron. All of the outputs from
+# one layer become inputs to the neurons on the next layer.
+
+# %%
+
+# Forward propagate input to a network output
+def forward_propagate(network, row):
+    inputs = row
+    for layer in network:
+        new_inputs = []
+        for neuron in layer:
+            activation = activate(neuron['weights'], inputs)
+            neuron['output'] = transfer(activation)
+            new_inputs.append(neuron['output'])
+        inputs = new_inputs
+    return inputs
+
+# %%
+
+# test forward propagation
+network = [
+        [{'weights': [0.13436424411240122, 0.8474337369372327, 0.763774618976614]}],
+        [{'weights': [0.2550690257394217, 0.49543508709194095]}, {'weights': [0.4494910647887381, 0.651592972722763]}]
+]
+row = [1, 0, None]
+output = forward_propagate(network, row)
+print(output)
+
+# %%
