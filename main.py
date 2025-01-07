@@ -1,6 +1,6 @@
-# ───────────────────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 # 1. Initialize Network
-# ───────────────────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 #
 # Each neuron has a set of weights that need to be maintained. One weight for each
 # input connection and an additional weight for the bias. We will need to store
@@ -10,6 +10,8 @@
 #
 # A neural network is organized into layers. We will organize layers as arrays of
 # dictionaries and treat the whole network as an array of layers.
+
+# %%
 
 from random import random, seed
 
@@ -50,9 +52,9 @@ for layer in network:
 
 # %%
 
-# ───────────────────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 # 2. Forward Propagate
-# ───────────────────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
 #
 # We can calculate an output from a neural network by propagating an input signal
 # through each layer until the output layer outputs its values.
@@ -62,7 +64,7 @@ for layer in network:
 #     1. Neuron Activation
 #     2. Neuron Transfer
 #     3. Forward Propagation
-
+#
 # ──────────────────────────────────────
 # 2.1 Neuron Activation
 # ──────────────────────────────────────
@@ -134,3 +136,88 @@ output = forward_propagate(network, row)
 print(output)
 
 # %%
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3. Back Propagate Error
+# ──────────────────────────────────────────────────────────────────────────────
+#
+#
+# The backpropagation algorithm is named for the way in which weights are 
+# trained. Error is calculated between the expected outputs and the outputs
+# forward propagated from the network. These errors are then propagated backward
+# through the network from the output layer to the hidden layer, assigning blame
+# for the error and updating weights as they go.
+#
+# We can break it down into:
+#
+#    1. Transfer Derivative
+#    2. Error Backpropagation
+#
+# ──────────────────────────────────────
+# 3.1 Transfer Derivative
+# ──────────────────────────────────────
+#
+# We are using the sigmoid transfer function, the derivative of which can be
+# calculated as follows:
+
+# %%
+
+def transfer_derivative(output):
+    return output * (1.0 - output)
+
+# %%
+
+# ──────────────────────────────────────
+# 3.2. Error Backpropagation
+# ──────────────────────────────────────
+#
+# The first step is to calculate the error for each output neuron, this will
+# give us our error signal (input) to propagate backwards through the network.
+# The error signal for a neuron in the hidden layer is calculated as the
+# weighted error of each neuron in the output layer. Think of the error
+# traveling back along the weights of the output layer to the neurons in the
+# hidden layer. The back-propagated error signal is accumulated and then used
+# to determine the error for the neuron in the hidden layer.
+
+# %%
+
+def backward_propagate_error(network, expected):
+    for i in reversed(range(len(network))):
+        layer = network[i]
+        errors = list()
+        if i != len(network) - 1:
+            for j in range(len(layer)):
+                error = 0.0
+                for neuron in network[i + 1]:
+                    error += (neuron['weights'][j] * neuron['delta'])
+                errors.append(error)
+        else:
+            for j in range(len(layer)):
+                neuron = layer[j]
+                errors.append(neuron['output'] - expected[j])
+        for j in range(len(layer)):
+            neuron = layer[j]
+            neuron['delta'] = errors[j] * transfer_derivative(neuron['output'])
+
+# %%
+
+# test backpropagation of error
+network = [
+    [{'output': 0.7105668883115941, 'weights': [0.13436424411240122, 0.8474337369372327, 0.763774618976614]}],
+    [{'output': 0.6213859615555266, 'weights': [0.2550690257394217, 0.49543508709194095]},
+     {'output': 0.6573693455986976, 'weights': [0.4494910647887381, 0.651592972722763]}]
+]
+expected = [0, 1]
+backward_propagate_error(network, expected)
+for layer in network:
+    print(layer)
+
+# %%
+
+
+
+
+
+
+
