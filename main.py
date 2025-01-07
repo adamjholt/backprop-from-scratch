@@ -216,8 +216,105 @@ for layer in network:
 # %%
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 4. Train Network
+# ──────────────────────────────────────────────────────────────────────────────
+# 
+# The network is trained using stochastic gradient descent.
+# 
+# This involves multiple iterations of exposing a training dataset to the
+# network and for each row of data forward propagating the inputs,
+# backpropagating the error and updating the network weights.
+#
+# This is broken down into two sections:
+#
+#     1. Update Weights
+#     2. Train Network
+#
+# ──────────────────────────────────────
+# 4.1 Update Weights
+# ──────────────────────────────────────
+
+# Once errors are calculated for each neuron in the network via the back
+# propagation method above, they can be used to update weights. Network weights
+# are updated as follows:
+#
+# `weight = weight - learning_rate * error * input`
+#
+# Where weight is a given weight, learning_rate is a parameter that you must
+# specify, error is the error calculated by the backpropagation procedure for
+# the neuron and input is the input value that caused the error.
+
+# %%
+
+# Update network weights with error
+def update_weights(network, row, l_rate):
+    for i in range(len(network)):
+        inputs = row[:-1]
+        if i != 0:
+            inputs = [neuron['output'] for neuron in network[i - 1]]
+            for neuron in network[i]:
+                for j in range(len(inputs)):
+                    neuron['weights'][j] -= l_rate * neuron['delta'] * inputs[j]
+                neuron['weights'][-1] -= l_rate * neuron['delta']
+
+# %%
+
+# ──────────────────────────────────────
+# 4.2. Train Network
+# ──────────────────────────────────────
+#
+# The network is updated using stochastic gradient descent. This involves first
+# looping for a fixed number of epochs and within each epoch updating the
+# network for each row in the training dataset.
+#
+# Below is a function that implements the training of an already initialized
+# neural network with a given training dataset, learning rate, fixed number of
+# epochs and an expected number of output values.
+#
+# The expected number of output values is used to transform class values in the
+# training data into a one hot encoding. That is a binary vector with one column
+# for each class value to match the output of the network. This is required to
+# calculate the error for the output layer.
+
+# %%
+
+# Train a network for a fixed number of epochs
+def train_network(network, train, l_rate, n_epoch, n_outputs):
+    for epoch in range(n_epoch):
+        sum_error = 0
+        for row in train:
+            outputs = forward_propagate(network, row)
+            expected = [0 for i in range(n_outputs)]
+            expected[row[-1]] = 1
+            sum_error += sum([(expected[i]-outputs[i])**2 for i in range(len(expected))])
+            backward_propagate_error(network, expected)
+            update_weights(network, row, l_rate)
+        print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, l_rate, sum_error))
+
+# %%
 
 
+# Test training backprop algorithm
+seed(1)
+dataset = [[2.7810836,2.550537003,0],
+           [1.465489372,2.362125076,0],
+           [3.396561688,4.400293529,0],
+           [1.38807019,1.850220317,0],
+           [3.06407232,3.005305973,0],
+           [7.627531214,2.759262235,1],
+           [5.332441248,2.088626775,1],
+           [6.922596716,1.77106367,1],
+           [8.675418651,-0.242068655,1],
+           [7.673756466,3.508563011,1]]
+n_inputs = len(dataset[0]) - 1
+n_outputs = len(set([row[-1] for row in dataset]))
+network = initialize_network(n_inputs, 2, n_outputs)
+train_network(network, dataset, 0.5, 20, n_outputs)
+for layer in network:
+    print(layer)
+
+# %%
 
 
 
